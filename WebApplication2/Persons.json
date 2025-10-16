@@ -1,0 +1,15 @@
+[
+  {
+    "CreateDate": "2025-10-16T14:43:24.035Z",
+    "FirstName": "John",
+    "LastName": "Doe",
+    "JobPosition": "Developer",
+    "Salary": 5000,
+    "WorkExperience": 5,
+    "PersonAddress": {
+      "Country": "Japan",
+      "City": "Osaka",
+      "HomeNumber": "123B"
+    }
+  }
+]
