@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore;
+using System;
+using WebApplication2.Domain;
 
 namespace WebApplication2
 {
@@ -11,6 +14,10 @@ namespace WebApplication2
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+            
+            builder.Services.AddDbContext<PersonContext>(options =>
+                   options.UseSqlite("Data Source=MyApp.db"));
+
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 

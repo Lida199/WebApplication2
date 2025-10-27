@@ -1,8 +1,7 @@
-﻿using WebApplication2.Models;
-using FluentValidation;
+﻿using FluentValidation;
 namespace WebApplication2.Validators
 {
-    public class PersonValidator : AbstractValidator<Person>
+    public class PersonValidator : AbstractValidator<Data.Person>
     {
         public PersonValidator() {
 
