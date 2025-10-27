@@ -111,7 +111,6 @@ namespace WebApplication2.Controllers
                     personAtIndex.PersonAddress.Country = person.PersonAddress.Country;
                     personAtIndex.PersonAddress.City = person.PersonAddress.City;
                     personAtIndex.PersonAddress.HomeNumber = person.PersonAddress.HomeNumber;
-                    //personAtIndex = person;
                     _context.SaveChanges();
                     return Ok($"Successfully updated the person at index {id}");
                 }
