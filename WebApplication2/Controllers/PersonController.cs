@@ -1,37 +1,31 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Text.Json;
-using WebApplication2.Models;
+using WebApplication2.Domain;
 using WebApplication2.Validators;
 
 namespace WebApplication2.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class PersonController : Controller
+    public class PersonController : ControllerBase
     {
-        private string FilePath = @"C:\Users\lidashubitidze\source\repos\WebApplication2\WebApplication2\Persons.json";
-        private List<Person> GetPersonsFromJson()
+        private readonly PersonContext _context;
+
+        public PersonController(PersonContext context)
         {
-            string json = System.IO.File.ReadAllText(FilePath);
-            List<Person> list = JsonSerializer.Deserialize<List<Person>>(json)
-                    ?? new List<Person>();
-            return list;
+            _context = context;
+
         }
 
         [HttpPost("addPerson")]
-        public IActionResult AddPerson([FromBody] Person person)
+        public IActionResult AddPerson([FromBody] Data.Person person)
         {
             var validator = new PersonValidator();
             var result = validator.Validate(person);
 
             if (result.IsValid)
             {
-
-                var list = GetPersonsFromJson();                
-                list.Add(person);
-
-                string updatedJson = JsonSerializer.Serialize(list, new JsonSerializerOptions { WriteIndented = true });
-                System.IO.File.WriteAllText(FilePath, updatedJson);
+                _context.Persons.Add(person);
+                _context.SaveChanges();
 
                 return Ok("Person added successfully!");
             }
@@ -46,51 +40,49 @@ namespace WebApplication2.Controllers
         [HttpGet("getList")]
         public IActionResult GetPersonList()
         {
-            return Ok(GetPersonsFromJson());
+            var data = _context.Persons.ToList();
+            return Ok(data);
         }
 
         [HttpGet("getPersonById/{id}")]
         public IActionResult GetPersonById([FromRoute] int id)
         {
-            var list = GetPersonsFromJson();
-            if (id > 0 && id <= list.Count)
-            {
-                return Ok(list[id - 1]);
-            }
-            else
-            {
-                return NotFound("No person at that index");
-            }
+            var person = _context.Persons.Find(id); 
+            if (person == null)
+                return NotFound("Person not found");
+            return Ok(person);
         }
 
         [HttpGet("filterPersons")]
         public IActionResult FilterPersons([FromQuery] double? salary, [FromQuery] string? city)
         {
-            var list = GetPersonsFromJson();
+            var data = _context.Persons.ToList();
 
             if (salary.HasValue)
             {
-                list = list.Where(p => p.Salary >= salary.Value).ToList();
+                data = _context.Persons.Where(p => p.Salary >= salary.Value).ToList();
+                _context.SaveChanges();
             }
 
             if (!string.IsNullOrEmpty(city))
             {
-                list = list.Where(p => p.PersonAddress.City.ToLower() == city.ToLower()).ToList();
+                data = _context.Persons.Where(p => p.PersonAddress.City.ToLower() == city.ToLower()).ToList();
+                _context.SaveChanges();
+
             }
 
-            return Ok(list);
+            return Ok(data);
         }
 
 
         [HttpDelete("deletePerson/{id}")]
         public IActionResult DeletePerson([FromRoute] int id)
         {
-            var list = GetPersonsFromJson();
-            if (id > 0 && id <= list.Count)
+            var person = _context.Persons.Find(id);
+            if (person != null)
             {
-                list.RemoveAt(id - 1);
-                string updatedJson = JsonSerializer.Serialize(list, new JsonSerializerOptions { WriteIndented = true });
-                System.IO.File.WriteAllText(FilePath, updatedJson);
+                _context.Persons.Remove(person);
+                _context.SaveChanges();
                 return Ok($"Successfully deleted the person at index {id}");
             }
             else
@@ -101,20 +93,26 @@ namespace WebApplication2.Controllers
 
 
         [HttpPut("updatePerson/{id}")]
-        public IActionResult UpdatePerson([FromBody] Person person, [FromRoute] int id)
+        public IActionResult UpdatePerson([FromBody] Data.Person person, [FromRoute] int id)
         {
-            var list = GetPersonsFromJson();
-            if (id > 0 && id <= list.Count)
+            Data.Person personAtIndex = _context.Persons.Find(id);
+            if (personAtIndex != null)
             {
                 var validator = new PersonValidator();
                 var result = validator.Validate(person);
                 if (result.IsValid)
                 {
-
-                list[id - 1] = person;
-                string updatedJson = JsonSerializer.Serialize(list, new JsonSerializerOptions { WriteIndented = true });
-                System.IO.File.WriteAllText(FilePath, updatedJson);
-                return Ok($"Successfully updated the person at index {id}");
+                    personAtIndex.FirstName = person.FirstName;
+                    personAtIndex.LastName = person.LastName;
+                    personAtIndex.JobPosition = person.JobPosition;
+                    personAtIndex.Salary = person.Salary;
+                    personAtIndex.WorkExperience = person.WorkExperience;
+                    personAtIndex.CreateDate = person.CreateDate;
+                    personAtIndex.PersonAddress.Country = person.PersonAddress.Country;
+                    personAtIndex.PersonAddress.City = person.PersonAddress.City;
+                    personAtIndex.PersonAddress.HomeNumber = person.PersonAddress.HomeNumber;
+                    _context.SaveChanges();
+                    return Ok($"Successfully updated the person at index {id}");
                 }
                 else
                 {
